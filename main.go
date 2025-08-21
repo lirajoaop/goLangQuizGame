@@ -51,12 +51,11 @@ func (g *GameState) ProcessCSV() {
 	}
 
 	for index, record := range records {
-		fmt.Println(index, record)
 		if index > 0 {
 			question := Question{
-				Text: record[0],
+				Text:    record[0],
 				Options: record[1:5],
-				Answer: toInt(record[5]),
+				Answer:  toInt(record[5]),
 			}
 
 			g.Questions = append(g.Questions, question)
@@ -67,14 +66,14 @@ func (g *GameState) ProcessCSV() {
 func (g *GameState) Run() {
 	//Exibir a pergunta pro usuário
 	for index, question := range g.Questions {
-		fmt.Println(index, question)
+		fmt.Println(index+1, question.Text)
 	}
 }
 
 func main() {
 	game := &GameState{Points: 0}
-	game.ProcessCSV()
 	game.Init()
+	game.ProcessCSV()
 	game.Run()
 }
 
@@ -86,4 +85,3 @@ func toInt(s string) int {
 
 	return i
 }
-
