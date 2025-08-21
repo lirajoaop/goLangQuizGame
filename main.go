@@ -16,7 +16,7 @@ type Question struct {
 
 type GameState struct {
 	Name      string
-	Points    string
+	Points    int
 	Questions []Question
 }
 
@@ -64,11 +64,18 @@ func (g *GameState) ProcessCSV() {
 	}
 }
 
+func (g *GameState) Run() {
+	//Exibir a pergunta pro usuário
+	for index, question := range g.Questions {
+		fmt.Println(index, question)
+	}
+}
+
 func main() {
-	game := &GameState{}
-	go game.ProcessCSV()
+	game := &GameState{Points: 0}
+	game.ProcessCSV()
 	game.Init()
-	fmt.Println(game.Questions)
+	game.Run()
 }
 
 func toInt(s string) int {
