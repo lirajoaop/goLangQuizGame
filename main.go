@@ -14,6 +14,7 @@ type Question struct {
 	Text    string
 	Options []string
 	Answer  int
+	Timer   int
 }
 
 type GameState struct {
@@ -71,7 +72,6 @@ func (g *GameState) Run() {
 	for index, question := range g.Questions {
 		fmt.Printf("\033[33m %d. %s \033[0m\n", index+1, question.Text)
 
-
 		//Iterar sobre as opções do game state e exibir no terminal
 
 		for j, option := range question.Options {
@@ -80,11 +80,11 @@ func (g *GameState) Run() {
 
 		fmt.Println("Informe a alternativa correta:")
 
-		//Coletar a alternativa do usuário, validar o caractere 
+		//Coletar a alternativa do usuário, validar o caractere
 		//Em caso de erro, usuário deve tentar novamente
 
 		var answer int
-		var err error 
+		var err error
 
 		for {
 			reader := bufio.NewReader(os.Stdin)
@@ -97,13 +97,17 @@ func (g *GameState) Run() {
 				fmt.Println(err.Error())
 				continue
 			}
+			if answer < 1 || answer > 4 {
+				fmt.Println("Por favor, informe apenas números de 1 a 4")
+				continue
+			}
 			break
 		}
 
 		//Validar a resposta
 		//Exibir a mensagem se correta ou não
 		//Calcular a pontuação
-		
+
 		if answer == question.Answer {
 			fmt.Println("Parabéns, você acertou!")
 			g.Points += 10
