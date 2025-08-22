@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Question struct {
@@ -52,10 +54,11 @@ func (g *GameState) ProcessCSV() {
 
 	for index, record := range records {
 		if index > 0 {
+			correctAnswer, _ := toInt(record[5])
 			question := Question{
 				Text:    record[0],
 				Options: record[1:5],
-				Answer:  toInt(record[5]),
+				Answer:  correctAnswer,
 			}
 
 			g.Questions = append(g.Questions, question)
@@ -66,22 +69,65 @@ func (g *GameState) ProcessCSV() {
 func (g *GameState) Run() {
 	//Exibir a pergunta pro usuário
 	for index, question := range g.Questions {
-		fmt.Println(index+1, question.Text)
+		fmt.Printf("\033[33m %d. %s \033[0m\n", index+1, question.Text)
+
+
+		//Iterar sobre as opções do game state e exibir no terminal
+
+		for j, option := range question.Options {
+			fmt.Printf("[%d] %s\n", j+1, option)
+		}
+
+		fmt.Println("Informe a alternativa correta:")
+
+		//Coletar a alternativa do usuário, validar o caractere 
+		//Em caso de erro, usuário deve tentar novamente
+
+		var answer int
+		var err error 
+
+		for {
+			reader := bufio.NewReader(os.Stdin)
+			read, _ := reader.ReadString('\n')
+			read = strings.TrimSpace(read)
+
+			answer, err = toInt(read)
+
+			if err != nil {
+				fmt.Println(err.Error())
+				continue
+			}
+			break
+		}
+
+		//Validar a resposta
+		//Exibir a mensagem se correta ou não
+		//Calcular a pontuação
+		
+		if answer == question.Answer {
+			fmt.Println("Parabéns, você acertou!")
+			g.Points += 10
+		} else {
+			fmt.Println("Ops! Resposta errada!")
+			fmt.Println("-----------------------------------------------")
+		}
 	}
 }
 
 func main() {
 	game := &GameState{Points: 0}
+	go game.ProcessCSV()
 	game.Init()
-	game.ProcessCSV()
 	game.Run()
+
+	fmt.Printf("Fim de jogo. Você fez %d pontos\n", game.Points)
 }
 
-func toInt(s string) int {
+func toInt(s string) (int, error) {
 	i, err := strconv.Atoi(s)
 	if err != nil {
-		panic(err)
+		return 0, errors.New("não é permitido caractere diferente de número. Por favor, insira um número")
 	}
 
-	return i
+	return i, nil
 }
