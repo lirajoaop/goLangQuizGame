@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Question struct {
@@ -60,6 +61,7 @@ func (g *GameState) ProcessCSV() {
 				Text:    record[0],
 				Options: record[1:5],
 				Answer:  correctAnswer,
+				Timer: 15,
 			}
 
 			g.Questions = append(g.Questions, question)
@@ -78,43 +80,43 @@ func (g *GameState) Run() {
 			fmt.Printf("[%d] %s\n", j+1, option)
 		}
 
-		fmt.Println("Informe a alternativa correta:")
+		fmt.Printf("Informe a alternativa correta (Você tem até %d segundos):\n", question.Timer)
 
-		//Coletar a alternativa do usuário, validar o caractere
-		//Em caso de erro, usuário deve tentar novamente
+		answerChan := make(chan string)
+
+		go func () {
+			reader := bufio.NewReader(os.Stdin)
+			read, _ := reader.ReadString('\n')
+			answerChan <- strings.TrimSpace(read)
+		}()
 
 		var answer int
 		var err error
+		var timeout bool
 
-		for {
-			reader := bufio.NewReader(os.Stdin)
-			read, _ := reader.ReadString('\n')
-			read = strings.TrimSpace(read)
-
-			answer, err = toInt(read)
-
-			if err != nil {
-				fmt.Println(err.Error())
-				continue
+		select {
+		case userAnswer := <-answerChan:
+			answer, err = toInt(userAnswer)
+			if err != nil || answer < 1 || answer > 4 {
+				fmt.Println("Resposta inválida. O jogo será encerrado.")
+				os.Exit(1)
 			}
-			if answer < 1 || answer > 4 {
-				fmt.Println("Por favor, informe apenas números de 1 a 4")
-				continue
-			}
-			break
+		case <-time.After(time.Duration(question.Timer) * time.Second):
+			fmt.Println("\nTempo esgotado! O jogo será encerrado.")
+			timeout = true
 		}
 
-		//Validar a resposta
-		//Exibir a mensagem se correta ou não
-		//Calcular a pontuação
+		if timeout {
+			return
+		}
 
 		if answer == question.Answer {
 			fmt.Println("Parabéns, você acertou!")
 			g.Points += 10
 		} else {
 			fmt.Println("Ops! Resposta errada!")
-			fmt.Println("-----------------------------------------------")
 		}
+		fmt.Println("------------------------------------------")
 	}
 }
 
