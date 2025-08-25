@@ -40,10 +40,38 @@ func (g *GameState) Init() {
 	fmt.Printf("Vamos ao jogo, %s\n", g.Name)
 }
 
-func (g *GameState) ProcessCSV() {
-	f, err := os.Open("quizgo.csv")
+func ChooseCSVFile () string {
+	fmt.Println("\n Escolha um tema para o quiz:")
+	fmt.Println("[1] História")
+	fmt.Println("[2] Inglês")
+	fmt.Println("[3] Conhecimentos Gerais")
+
+	reader := bufio.NewReader(os.Stdin)
+	choice, err := reader.ReadString('\n')
 	if err != nil {
-		panic("erro ao ler arquivo")
+		panic ("Erro ao ler a escolha.")
+	}
+
+	choice = strings.TrimSpace(choice)
+
+	switch choice {
+	case "1":
+		return "historia-go.csv"
+	case "2":
+		return "ingles-go.csv"
+	case "3":
+		return "gerais-go.csv"
+	default:
+		fmt.Println("Opção inválida. O jogo será encerrado.")
+		os.Exit(1)
+		return ""
+	}
+}
+
+func (g *GameState) ProcessCSV(filename string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic("erro ao ler arquivo: " + err.Error())
 	}
 
 	defer f.Close()
@@ -122,8 +150,9 @@ func (g *GameState) Run() {
 
 func main() {
 	game := &GameState{Points: 0}
-	go game.ProcessCSV()
 	game.Init()
+	filename := ChooseCSVFile()
+	game.ProcessCSV(filename)
 	game.Run()
 
 	fmt.Printf("Fim de jogo. Você fez %d pontos\n", game.Points)
